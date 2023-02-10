@@ -84,6 +84,7 @@ func Debug(message interface{}, a ...any) {
 	if config.Flag < FLAG_DEBUG {
 		return
 	}
+	checkRun()
 	logger.messageChan <- getLogBuffer(Cyan, "DEBUG", message, a)
 }
 
