@@ -36,7 +36,7 @@ type Logger struct {
 	Config      *LoggerConfig
 	messageChan chan []byte
 	exitChan    chan bool
-	running     atomic.Bool
+	running     int32
 }
 
 var config = &LoggerConfig{
@@ -48,11 +48,12 @@ var config = &LoggerConfig{
 var logger = &Logger{
 	Config:   config,
 	exitChan: make(chan bool),
+	running:  0,
 }
 
 func RunLogger() {
 	logger.messageChan = make(chan []byte, logger.Config.MessageChanSize)
-	logger.running.Store(true)
+	atomic.AddInt32(&logger.running, 1)
 	go logger.runWriteAsyncWriteToOutputs()
 }
 
@@ -61,8 +62,8 @@ func StopLogger() {
 }
 
 func checkRun() {
-	running := logger.running.Load()
-	if !running {
+	running := atomic.LoadInt32(&logger.running)
+	if running == 0 {
 		RunLogger()
 	}
 }
