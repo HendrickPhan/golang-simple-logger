@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"sync/atomic"
 	"time"
 )
 
@@ -27,45 +26,21 @@ var (
 )
 
 type LoggerConfig struct {
-	Flag            int
-	Outputs         []*os.File
-	MessageChanSize int
+	Flag    int
+	Outputs []*os.File
 }
 
 type Logger struct {
-	Config      *LoggerConfig
-	messageChan chan []byte
-	exitChan    chan bool
-	running     int32
+	Config *LoggerConfig
 }
 
 var config = &LoggerConfig{
-	Flag:            FLAG_DEBUGP,
-	Outputs:         []*os.File{os.Stdout},
-	MessageChanSize: 1000,
+	Flag:    FLAG_DEBUGP,
+	Outputs: []*os.File{os.Stdout},
 }
 
 var logger = &Logger{
-	Config:   config,
-	exitChan: make(chan bool),
-	running:  0,
-}
-
-func RunLogger() {
-	logger.messageChan = make(chan []byte, logger.Config.MessageChanSize)
-	atomic.AddInt32(&logger.running, 1)
-	go logger.runWriteAsyncWriteToOutputs()
-}
-
-func StopLogger() {
-	logger.exitChan <- true
-}
-
-func checkRun() {
-	running := atomic.LoadInt32(&logger.running)
-	if running == 0 {
-		RunLogger()
-	}
+	Config: config,
 }
 
 func SetConfig(newConfig *LoggerConfig) {
@@ -76,40 +51,43 @@ func DebugP(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_DEBUGP {
 		return
 	}
-	checkRun()
-	logger.messageChan <- getLogBuffer(Purple, "DEBUG_P", message, a)
+	logger.writeToOutputs(
+		getLogBuffer(Purple, "DEBUG_P", message, a),
+	)
 }
 
 func Debug(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_DEBUG {
 		return
 	}
-	checkRun()
-	logger.messageChan <- getLogBuffer(Cyan, "DEBUG", message, a)
+	logger.writeToOutputs(
+		getLogBuffer(Cyan, "DEBUG", message, a),
+	)
 }
 
 func Info(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_INFO {
 		return
 	}
-	checkRun()
-	logger.messageChan <- getLogBuffer(Green, "INFO", message, a)
+	logger.writeToOutputs(
+		getLogBuffer(Green, "INFO", message, a),
+	)
 }
 
 func Warn(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_WARN {
 		return
 	}
-	checkRun()
-	logger.messageChan <- getLogBuffer(Yellow, "WARN", message, a)
+	logger.writeToOutputs(
+		getLogBuffer(Yellow, "WARN", message, a),
+	)
 }
 
 func Error(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_ERROR {
 		return
 	}
-	checkRun()
-	logger.messageChan <- getLogBuffer(Red, "ERROR", message, a)
+	logger.writeToOutputs(getLogBuffer(Red, "ERROR", message, a))
 }
 
 func getLogBuffer(color string, prefix string, message interface{}, a []interface{}) []byte {
@@ -129,15 +107,8 @@ func getLogBuffer(color string, prefix string, message interface{}, a []interfac
 	return buffer.Bytes()
 }
 
-func (logger *Logger) runWriteAsyncWriteToOutputs() {
-	for {
-		select {
-		case message := <-logger.messageChan:
-			for i := range config.Outputs {
-				config.Outputs[i].Write(message)
-			}
-		case <-logger.exitChan:
-			return
-		}
+func (logger *Logger) writeToOutputs(buffer []byte) {
+	for i := range config.Outputs {
+		config.Outputs[i].Write(buffer)
 	}
 }
