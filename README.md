@@ -26,7 +26,7 @@ This is a simple golang logger package
         MessageChanSize: 1000,
     }
     logger.SetConfig(config)
-    logger.Debug("Log debuf")
+    logger.Debug("Log debug")
 ```
 
 
