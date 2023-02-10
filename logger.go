@@ -72,7 +72,7 @@ func SetConfig(newConfig *LoggerConfig) {
 	config = newConfig
 }
 
-func DebugP(message interface{}, a ...any) {
+func DebugP(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_DEBUGP {
 		return
 	}
@@ -80,7 +80,7 @@ func DebugP(message interface{}, a ...any) {
 	logger.messageChan <- getLogBuffer(Purple, "DEBUG_P", message, a)
 }
 
-func Debug(message interface{}, a ...any) {
+func Debug(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_DEBUG {
 		return
 	}
@@ -88,7 +88,7 @@ func Debug(message interface{}, a ...any) {
 	logger.messageChan <- getLogBuffer(Cyan, "DEBUG", message, a)
 }
 
-func Info(message interface{}, a ...any) {
+func Info(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_INFO {
 		return
 	}
@@ -96,7 +96,7 @@ func Info(message interface{}, a ...any) {
 	logger.messageChan <- getLogBuffer(Green, "INFO", message, a)
 }
 
-func Warn(message interface{}, a ...any) {
+func Warn(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_WARN {
 		return
 	}
@@ -104,7 +104,7 @@ func Warn(message interface{}, a ...any) {
 	logger.messageChan <- getLogBuffer(Yellow, "WARN", message, a)
 }
 
-func Error(message interface{}, a ...any) {
+func Error(message interface{}, a ...interface{}) {
 	if config.Flag < FLAG_ERROR {
 		return
 	}
