@@ -21,7 +21,6 @@ This is a simple golang logger package
     config := &logger.LoggerConfig{
         Flag:            logger.FLAG_DEBUGP,
         Outputs:         []*os.File{os.Stdout, f}, // For both file and terminal
-        MessageChanSize: 1000,
     }
     logger.SetConfig(config)
     logger.Debug("Log debug")
