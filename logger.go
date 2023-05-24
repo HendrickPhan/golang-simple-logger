@@ -7,8 +7,9 @@ import (
 	"time"
 )
 
-var (
-	FLAG_DEBUGP = 5
+const (
+	FLAG_DEBUGP = 0
+	FLAG_TRACE  = 5
 	FLAG_DEBUG  = 4
 	FLAG_INFO   = 3
 	FLAG_WARN   = 2
@@ -35,7 +36,7 @@ type Logger struct {
 }
 
 var config = &LoggerConfig{
-	Flag:    FLAG_DEBUGP,
+	Flag:    FLAG_INFO,
 	Outputs: []*os.File{os.Stdout},
 }
 
@@ -53,6 +54,15 @@ func DebugP(message interface{}, a ...interface{}) {
 	}
 	logger.writeToOutputs(
 		getLogBuffer(Purple, "DEBUG_P", message, a),
+	)
+}
+
+func Trace(message interface{}, a ...interface{}) {
+	if config.Flag < FLAG_TRACE {
+		return
+	}
+	logger.writeToOutputs(
+		getLogBuffer(Blue, "TRACE", message, a),
 	)
 }
 
@@ -96,7 +106,7 @@ func getLogBuffer(color string, prefix string, message interface{}, a []interfac
 	buffer.WriteString("[")
 	buffer.WriteString(prefix)
 	buffer.WriteString("][")
-	buffer.WriteString(time.Now().Format(time.RFC822Z))
+	buffer.WriteString(time.Now().Format(time.Stamp))
 	buffer.WriteString("] ")
 	buffer.WriteString(fmt.Sprintf("%v ", message))
 	for _, v := range a {
